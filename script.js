@@ -4,31 +4,30 @@ const messageInput = document.getElementById("message-input");
 const sendButton = document.getElementById("send-button");
 const disconnectButton = document.getElementById("disconnect-button");
 const notificationsDiv = document.getElementById("notifications");
-
-const wsUrl = "wss://example.com"; // URL does NOT matter in tests
-let socket = null;
-let reconnectTimeout = null;
+const wsUrl = "wss://socketsbay.com/wss/v2/1/demo/";
+let socket;
+let reconnectTimer = null;
 
 const displayNotification = (message) => {
-  const div = document.createElement("div");
-  div.textContent = message;
-  notificationsDiv.appendChild(div);
+  const p = document.createElement("p");
+  p.textContent = message;
+  notificationsDiv.appendChild(p);
 };
 
-const setConnectedState = (connected) => {
-  statusDiv.textContent = connected ? "Connected" : "Disconnected";
-  sendButton.disabled = !connected;
+const updateStatus = (text, canSend) => {
+  statusDiv.textContent = text;
+  sendButton.disabled = !canSend;
 };
 
 const connectWebSocket = () => {
   socket = new WebSocket(wsUrl);
-  setConnectedState(false);
+  updateStatus("Connecting...", false);
 
   socket.onopen = () => {
-    setConnectedState(true);
-    if (reconnectTimeout) {
-      clearTimeout(reconnectTimeout);
-      reconnectTimeout = null;
+    updateStatus("Connected", true);
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
     }
   };
 
@@ -37,8 +36,8 @@ const connectWebSocket = () => {
   };
 
   socket.onclose = () => {
-    setConnectedState(false);
-    reconnectTimeout = setTimeout(() => {
+    updateStatus("Disconnected. Reconnecting in 10s...", false);
+    reconnectTimer = setTimeout(() => {
       connectWebSocket();
     }, 10000);
   };
